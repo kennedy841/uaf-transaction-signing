@@ -1,0 +1,11 @@
+= Starting with uaf api server
+
+This is an example output for a service running at http://localhost:8080:
+
+Api 1
+
+operation::uaf-controller-test/should-enroll-device-1[snippets='http-request,http-response']
+
+Api 2
+
+operation::uaf-controller-test/should-enroll-device-2[snippets='path-parameters,http-request,http-response']

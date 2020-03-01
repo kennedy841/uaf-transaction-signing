@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: uaf-api-deployment
+  name: uaf-api-deployment
+  annotations:
+    build-version: 1.0.1-SNAPSHOT
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: uaf-api
+      type: microservice
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: uaf-api
+        type: microservice
+        deployer: salvatore
+    spec:
+      containers:
+      - image: docker.io/healthscannerit/uaf-api
+        name: uaf-api
+        resources:
+          requests:
+            memory: "128M"
+            cpu: "10m"
+          limits:
+            memory: "256M"
+            cpu: "100m"
+        env:
+          - name: SPRING_PROFILES_ACTIVE
+            value: "prod,k8s"
+        envFrom:
+          - secretRef:
+              name: app-secret
+        command: ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
+        securityContext:
+          runAsUser: 1000
+          capabilities:
+            add: ["MAC_ADMIN"]
+      - image: mysql:8.0
+        name: mysql
+        env:
+          - name : MYSQL_DATABASE
+            value: db
+          - name: MYSQL_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: app-secret
+                key: db.root.password
+          - name: MYSQL_USER
+            valueFrom:
+              secretKeyRef:
+                name: app-secret
+                key: db.username
+          - name: MYSQL_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: app-secret
+                key: db.password
+        ports:
+          - containerPort: 7000
+      nodeSelector:
+        size: LargeNode
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: size
+                    operator: NotIn
+                    values:
+                      - MediumNode
+
+      imagePullSecrets:
+      - name: regcred
+      volumes:
+        - name: app-secret-volumes
+          secret:
+            secretName: app-secret
