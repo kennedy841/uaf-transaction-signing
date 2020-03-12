@@ -4,6 +4,7 @@ package ch.snapoli.lab.uaf.uafapi.adapter;
 import org.bouncycastle.jce.ECNamedCurveTable;
 import org.bouncycastle.jce.spec.ECNamedCurveParameterSpec;
 import org.bouncycastle.jce.spec.ECNamedCurveSpec;
+import org.bouncycastle.util.encoders.Hex;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
@@ -46,6 +47,22 @@ public class ECSACryptor {
         ecdsaSign.update(plaintext.getBytes("UTF-8"));
         byte[] signature = ecdsaSign.sign();
         return Base64.getEncoder().encodeToString(signature);
+    }
+
+
+    public static PublicKey createPublic(String base64) throws Exception {
+        //first 2 char are the encoding
+        String s1 = new String(Hex.toHexString(Base64.getDecoder().decode(base64)));
+        s1 = s1.substring(2);
+
+
+        BigInteger x = new BigInteger(s1.substring(0, s1.length() / 2), 16);
+
+        BigInteger y = new BigInteger(s1.substring(s1.length() / 2), 16);
+
+
+        return createPublic(x.toString(), y.toString());
+
     }
 
     public static PublicKey createPublic(String x, String y) throws Exception {
